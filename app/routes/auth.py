@@ -24,7 +24,9 @@ def login(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuário ou senha inválidos")
 
     if user.mfa_enabled:
-        if otp is None or not hmac.compare_digest(otp, settings.mfa_demo_code):
+        codigo = otp or form_data.client_secret
+        if not codigo or not hmac.compare_digest(
+            codigo.encode("utf-8"), settings.mfa_demo_code.encode("utf-8")):
             raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Código MFA inválido ou ausente")
 
     token = create_access_token(username=user.username, role=user.role)
