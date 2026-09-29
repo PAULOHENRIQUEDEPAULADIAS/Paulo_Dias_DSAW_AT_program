@@ -1,10 +1,12 @@
 import os
+
+os.environ.setdefault("SECRET_KEY", "chave-somente-para-testes-0123456789")
+
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
 
-os.environ.setdefault("SECRET_KEY", "chave-somente-para-testes-0123456789")
 
 @pytest.fixture
 def client():

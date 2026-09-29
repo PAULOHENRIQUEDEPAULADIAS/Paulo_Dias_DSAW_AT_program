@@ -1,11 +1,8 @@
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 
-from app.auth.security import (
-    ALGORITHM,
-    SECRET_KEY,
-    oauth2_scheme
-)
+from app.auth.security import oauth2_scheme
+from app.config import settings
 from app.database.database import usuarios
 
 
@@ -19,8 +16,8 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(
             token,
-            SECRET_KEY,
-            algorithms=[ALGORITHM]
+            settings.secret_key,
+            algorithms=[settings.algorithm]
         )
 
         username = payload.get("sub")
