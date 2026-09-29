@@ -1,4 +1,6 @@
 from tests.conftest import auth, login
+from datetime import timedelta
+from app.auth.security import create_access_token
 
 def test_nao_admin_nao_acessa_rota_admin(client):
     headers = auth(client, "dr.joao", "senha2")
@@ -12,3 +14,8 @@ def test_admin_acessa_rota_admin_com_mfa(client):
 
 def test_admin_sem_mfa_e_recusado(client):
     assert login(client, "admin", "senha1").status_code == 401
+
+def test_token_expirado_e_rejeitado(client):
+    token = create_access_token("dr.joao", "medico", expires_delta=timedelta(seconds=-1))
+    r = client.get("/consultas/", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 401

@@ -1,4 +1,3 @@
-# tests/test_consulta.py
 from tests.conftest import auth
 
 def test_listar_consultas_autenticado(client):
