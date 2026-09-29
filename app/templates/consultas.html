@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+Consultas
+{% endblock %}
+
+{% block content %}
+
+<h2>Consultas cadastradas</h2>
+
+<ul>
+    {% for consulta in consultas %}
+        <li>
+            <strong>{{ consulta.paciente }}</strong>
+            - {{ consulta.especialidade }}
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
