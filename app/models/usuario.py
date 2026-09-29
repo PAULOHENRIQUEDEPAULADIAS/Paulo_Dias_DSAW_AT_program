@@ -10,3 +10,8 @@ class Usuario(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class UsuarioResponse(BaseModel):
+    username: str
+    role: str
+    mfa_enabled: bool

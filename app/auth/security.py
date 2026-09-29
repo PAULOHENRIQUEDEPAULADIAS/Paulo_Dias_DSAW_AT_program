@@ -1,11 +1,10 @@
 from datetime import datetime, timedelta, timezone
+from app.config import settings
 
 from jose import jwt
 import bcrypt
+from fastapi.security import OAuth2PasswordBearer
 
-SECRET_KEY = "chave-secreta"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 
 def hash_password(password: str) -> str:
@@ -23,7 +22,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(username: str,role: str,expires_delta: timedelta | None = None):
     expire = datetime.now(timezone.utc) + (
         expires_delta
-        or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        or timedelta(minutes=settings.access_token_expire_minutes)
     )
 
     payload = {
@@ -34,12 +33,9 @@ def create_access_token(username: str,role: str,expires_delta: timedelta | None 
 
     return jwt.encode(
         payload,
-        SECRET_KEY,
-        algorithm=ALGORITHM
+        settings.secret_key,
+        algorithm=settings.algorithm
     )
-
-from fastapi.security import OAuth2PasswordBearer
-
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/auth/token"

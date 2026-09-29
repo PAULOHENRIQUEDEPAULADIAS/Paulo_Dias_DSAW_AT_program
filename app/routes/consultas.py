@@ -3,9 +3,9 @@ from fastapi.templating import Jinja2Templates
 
 from app.auth.dependencies import get_current_user, require_role
 from app.database.database import consultas
-from app.models.consulta import ConsultaResponse
+from app.models.consulta import Consulta, ConsultaCreate, ConsultaResponse
 from app.models.usuario import Usuario
-from app.database.database import usuarios
+from pydantic import BaseModel, ConfigDict
 
 
 
@@ -27,7 +27,8 @@ def listar_consultas(current_user: Usuario = Depends(get_current_user)):
 
 @router.get("/pagina")
 def pagina_consultas(request: Request):
-    return Jinja2Templates.templates.TemplateResponse(
+    templates = Jinja2Templates(directory="app/templates")
+    return templates.TemplateResponse(
         request=request,
         name="consultas.html",
         context={"consultas": consultas}
@@ -61,6 +62,18 @@ def obter_consulta(consulta_id: int,current_user: Usuario = Depends(get_current_
 
     return consulta
 
-@router.get("/usuarios")
-def listar_usuarios(current_user=Depends(require_role("admin"))):
-    return usuarios
+
+@router.post("/", response_model=ConsultaResponse, status_code=201)
+def criar_consulta(
+    dados: ConsultaCreate,
+    current_user: Usuario = Depends(require_role("medico", "admin")),
+):
+    nova = Consulta(
+        id=max((c.id for c in consultas), default=0) + 1,
+        paciente=dados.paciente,
+        especialidade=dados.especialidade,
+        observacao_interna="",
+        owner_username=current_user.username,
+    )
+    consultas.append(nova)
+    return nova

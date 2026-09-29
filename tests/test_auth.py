@@ -1,24 +1,14 @@
-from fastapi.testclient import TestClient
+from tests.conftest import auth, login
 
-from app.main import app
+def test_nao_admin_nao_acessa_rota_admin(client):
+    headers = auth(client, "dr.joao", "senha2")
+    assert client.get("/admin/usuarios", headers=headers).status_code == 403
 
+def test_admin_acessa_rota_admin_com_mfa(client):
+    headers = auth(client, "admin", "senha1", otp="123456")
+    resp = client.get("/admin/usuarios", headers=headers)
+    assert resp.status_code == 200
+    assert "senha_hash" not in resp.json()[0]
 
-client = TestClient(app)
-
-
-def test_usuario_nao_admin_nao_acessa_rota_admin():
-    response = client.post(
-        "/auth/token",
-        data={
-            "username": "dr.joao",
-            "password": "senha-medico"
-        }
-    )
-
-    assert response.status_code == 200
-
-    token = response.json()["access_token"]
-
-    response = client.get("/admin/usuarios",headers={"Authorization": f"Bearer {token}"})
-
-    assert response.status_code == 403
+def test_admin_sem_mfa_e_recusado(client):
+    assert login(client, "admin", "senha1").status_code == 401

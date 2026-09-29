@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class Consulta(BaseModel):
@@ -11,5 +11,10 @@ class Consulta(BaseModel):
 
 class ConsultaResponse(BaseModel):
     id: int
+    paciente: str
+    especialidade: str
+
+class ConsultaCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     paciente: str
     especialidade: str
