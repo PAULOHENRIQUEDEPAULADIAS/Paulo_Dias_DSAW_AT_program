@@ -49,3 +49,43 @@ def require_role(*roles: str):
         return current_user
     return role_checker
 
+def get_m2m_client(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Token M2M inválido",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        payload = jwt.decode(
+            token,
+            settings.secret_key,
+            algorithms=[settings.algorithm]
+        )
+
+        client_type = payload.get("client_type")
+        client_id = payload.get("sub")
+
+        if client_type != "m2m" or client_id is None:
+            raise credentials_exception
+
+        return payload
+
+    except JWTError:
+        raise credentials_exception
+
+
+def require_scope(required_scope: str):
+    def scope_checker(token_payload=Depends(get_m2m_client)):
+        scopes = token_payload.get("scope", "").split()
+
+        if required_scope not in scopes:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Escopo insuficiente"
+            )
+
+        return token_payload
+
+    return scope_checker
+

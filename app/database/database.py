@@ -41,3 +41,12 @@ consultas = [
         owner_username="admin"
     ),
 ]
+
+clientes_m2m = {
+    "laboratorio_xyz": {
+        "client_secret": "segredo-laboratorio",
+        "scopes": [
+            "consultas:leitura"
+        ]
+    }
+}

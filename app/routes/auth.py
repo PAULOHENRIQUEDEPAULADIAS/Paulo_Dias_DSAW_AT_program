@@ -5,6 +5,9 @@ from app.auth.security import (create_access_token,verify_password)
 from app.database.database import usuarios
 from app.config import settings
 
+from app.auth.security import create_m2m_access_token
+from app.database.database import clientes_m2m
+
 
 
 router = APIRouter(
@@ -32,3 +35,42 @@ def login(
     token = create_access_token(username=user.username, role=user.role)
     return {"access_token": token, "token_type": "bearer"}
 
+@router.post("/token/m2m")
+def token_m2m(client_id: str = Form(...),client_secret: str = Form(...),scope: str = Form("")):
+    cliente = clientes_m2m.get(client_id)
+
+    if cliente is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Cliente inválido"
+        )
+
+    if not hmac.compare_digest(
+        client_secret,
+        cliente["client_secret"]
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciais inválidas"
+        )
+
+    requested_scopes = scope.split()
+
+    for requested_scope in requested_scopes:
+        if requested_scope not in cliente["scopes"]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Escopo não permitido: {requested_scope}"
+            )
+
+    token = create_m2m_access_token(
+        client_id=client_id,
+        scopes=requested_scopes
+    )
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "expires_in": settings.access_token_expire_minutes * 60,
+        "scope": " ".join(requested_scopes)
+    }

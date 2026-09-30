@@ -40,3 +40,20 @@ def create_access_token(username: str,role: str,expires_delta: timedelta | None 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/auth/token"
 )
+
+def create_m2m_access_token(client_id: str,scopes: list[str]):
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.access_token_expire_minutes)
+
+    payload = {
+        "sub": client_id,
+        "client_type": "m2m",
+        "scope": " ".join(scopes),
+        "exp": expire,
+    }
+
+    return jwt.encode(
+        payload,
+        settings.secret_key,
+        algorithm=settings.algorithm
+    )
