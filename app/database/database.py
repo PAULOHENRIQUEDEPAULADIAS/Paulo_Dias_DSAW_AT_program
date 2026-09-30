@@ -14,7 +14,7 @@ usuarios = [
         username="dr.joao",
         senha_hash=hash_password("senha2"),
         role="medico",
-        mfa_enabled=True
+        mfa_enabled=False
     ),
     Usuario(
         username="recepcao",
