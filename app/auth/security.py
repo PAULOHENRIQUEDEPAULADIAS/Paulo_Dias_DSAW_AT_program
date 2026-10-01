@@ -57,3 +57,4 @@ def create_m2m_access_token(client_id: str,scopes: list[str]):
         settings.secret_key,
         algorithm=settings.algorithm
     )
+    

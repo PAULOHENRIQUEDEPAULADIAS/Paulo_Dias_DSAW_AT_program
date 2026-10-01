@@ -1,12 +1,14 @@
 import hmac
-from fastapi import APIRouter, Depends, HTTPException, status, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, status, Form
 from fastapi.security import OAuth2PasswordRequestForm
-from app.auth.security import (create_access_token,verify_password)
-from app.database.database import usuarios
-from app.config import settings
+from sqlmodel import Session, select
 
+from app.database.database import get_db, clientes_m2m
+from app.models.usuario import Usuario
+from app.auth.security import (create_access_token,verify_password)
+from app.config import settings
 from app.auth.security import create_m2m_access_token
-from app.database.database import clientes_m2m
+from app.rate_limit import limiter
 
 
 
@@ -17,12 +19,20 @@ router = APIRouter(
 
 
 @router.post("/token")
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     otp: str | None = Form(default=None),
+    db: Session = Depends(get_db),
 ):
-    user = next((u for u in usuarios if u.username == form_data.username), None)
+    user = db.exec(
+    select(Usuario).where(
+            Usuario.username == form_data.username
+        )
+    ).first()
 
+    
     if user is None or not verify_password(form_data.password, user.senha_hash):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuário ou senha inválidos")
 
@@ -36,7 +46,8 @@ def login(
     return {"access_token": token, "token_type": "bearer"}
 
 @router.post("/token/m2m")
-def token_m2m(client_id: str = Form(...),client_secret: str = Form(...),scope: str = Form("")):
+@limiter.limit("60/minute")
+def token_m2m(request: Request, client_id: str = Form(...),client_secret: str = Form(...),scope: str = Form("")):
     cliente = clientes_m2m.get(client_id)
 
     if cliente is None:

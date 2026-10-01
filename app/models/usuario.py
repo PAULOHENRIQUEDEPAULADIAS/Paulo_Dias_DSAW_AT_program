@@ -1,17 +1,22 @@
-from pydantic import BaseModel
+from sqlmodel import SQLModel, Field
 
 
-class Usuario(BaseModel):
-    username: str
+class Usuario(SQLModel, table=True):
+    username: str = Field(
+        primary_key=True,
+        index=True,
+        max_length=50
+    )
+
     senha_hash: str
     role: str
     mfa_enabled: bool = False
 
-class Token(BaseModel):
+class Token(SQLModel):
     access_token: str
     token_type: str
 
-class UsuarioResponse(BaseModel):
+class UsuarioResponse(SQLModel):
     username: str
     role: str
     mfa_enabled: bool
